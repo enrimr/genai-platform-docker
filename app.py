@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import os
 import torch
@@ -10,8 +10,12 @@ model_name = os.getenv('MODEL_NAME', 'gpt2')
 hf_token = os.getenv('HF_TOKEN')
 
 # Cargar el modelo y el tokenizador con el token de autenticación
-model = AutoModelForCausalLM.from_pretrained(model_name, use_auth_token=hf_token, torch_dtype=torch.float16)
-tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=hf_token)
+model = AutoModelForCausalLM.from_pretrained(model_name, token=hf_token, torch_dtype=torch.float16)
+tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_token)
+
+@app.route('/')
+def home():
+    return render_template('index.html')
 
 @app.route('/generate', methods=['POST'])
 def generate():
