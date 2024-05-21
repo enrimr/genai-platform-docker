@@ -5,12 +5,13 @@ import torch
 
 app = Flask(__name__)
 
-# Obtener el nombre del modelo desde una variable de entorno
+# Obtener el nombre del modelo y el token desde las variables de entorno
 model_name = os.getenv('MODEL_NAME', 'gpt2')
+hf_token = os.getenv('HF_TOKEN')
 
-# Cargar el modelo y el tokenizador
-model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16)
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+# Cargar el modelo y el tokenizador con el token de autenticación
+model = AutoModelForCausalLM.from_pretrained(model_name, use_auth_token=hf_token, torch_dtype=torch.float16)
+tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=hf_token)
 
 @app.route('/generate', methods=['POST'])
 def generate():
@@ -22,14 +23,18 @@ def generate():
     top_p = data.get('top_p', 1.0)
     
     inputs = tokenizer(prompt, return_tensors="pt")
+    input_ids = inputs['input_ids']
+    attention_mask = inputs['attention_mask']
     
     # Generar el texto con los parámetros especificados
     outputs = model.generate(
-        inputs['input_ids'],
+        input_ids=input_ids,
+        attention_mask=attention_mask,
         max_length=max_length,
         temperature=temperature,
         top_k=top_k,
-        top_p=top_p
+        top_p=top_p,
+        pad_token_id=tokenizer.eos_token_id
     )
     
     generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
