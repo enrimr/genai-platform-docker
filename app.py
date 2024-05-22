@@ -1,16 +1,15 @@
 from flask import Flask, request, jsonify, render_template
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import os
-import torch
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 
 # Obtener el nombre del modelo y el token desde las variables de entorno
-model_name = os.getenv('MODEL_NAME', 'gpt2')
+model_name = os.getenv('MODEL_NAME', 'distilgpt2')
 hf_token = os.getenv('HF_TOKEN')
 
 # Cargar el modelo y el tokenizador con el token de autenticación
-model = AutoModelForCausalLM.from_pretrained(model_name, token=hf_token, torch_dtype=torch.float16)
+model = AutoModelForCausalLM.from_pretrained(model_name, token=hf_token)
 tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_token)
 
 @app.route('/')
@@ -42,6 +41,11 @@ def generate():
     )
     
     generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    
+    # Elimina el texto del prompt de la respuesta generada
+    if generated_text.startswith(prompt):
+        generated_text = generated_text[len(prompt):].strip()
+    
     return jsonify({"generated_text": generated_text})
 
 if __name__ == '__main__':

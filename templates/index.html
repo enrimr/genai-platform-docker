@@ -26,15 +26,35 @@
             margin-top: 20px;
             overflow-y: auto;
             height: 70%;
+            display: flex;
+            flex-direction: column;
         }
         .message {
+            display: flex;
+            align-items: flex-start;
             margin: 10px 0;
         }
         .message.user {
-            text-align: right;
+            flex-direction: row-reverse;
         }
         .message.ai {
-            text-align: left;
+            flex-direction: row;
+        }
+        .message .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 10px;
+        }
+        .message .text {
+            max-width: 70%;
+            background: #e0e0e0;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .message.user .text {
+            background: #007bff;
+            color: white;
         }
         #input-container {
             width: 60%;
@@ -72,6 +92,16 @@
     </div>
     <script>
         document.getElementById('send-btn').addEventListener('click', function() {
+            sendMessage();
+        });
+
+        document.getElementById('user-input').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
             const userInput = document.getElementById('user-input').value;
             if (userInput.trim() !== '') {
                 addMessageToChatbox('user', userInput);
@@ -85,16 +115,33 @@
                 .then(response => response.json())
                 .then(data => {
                     addMessageToChatbox('ai', data.generated_text);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
                 });
                 document.getElementById('user-input').value = '';
             }
-        });
+        }
 
         function addMessageToChatbox(sender, message) {
             const chatbox = document.getElementById('chatbox');
             const messageElement = document.createElement('div');
             messageElement.classList.add('message', sender);
-            messageElement.innerText = message;
+            
+            const avatar = document.createElement('img');
+            avatar.classList.add('avatar');
+            if (sender === 'user') {
+                avatar.src = '/static/user-avatar.png'; // Cambia esto a la ruta de tu imagen de usuario
+            } else {
+                avatar.src = '/static/ai-avatar.png'; // Cambia esto a la ruta de tu imagen de AI
+            }
+            
+            const textElement = document.createElement('div');
+            textElement.classList.add('text');
+            textElement.innerText = message;
+            
+            messageElement.appendChild(avatar);
+            messageElement.appendChild(textElement);
             chatbox.appendChild(messageElement);
             chatbox.scrollTop = chatbox.scrollHeight;
         }
