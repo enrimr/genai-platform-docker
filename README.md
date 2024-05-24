@@ -14,8 +14,12 @@ docker run -e MODEL_NAME=gpt2 -p 8000:8000 huggingface-model-app
 With private model:
 
 ````
-docker run -e MODEL_NAME=meta-llama/Meta-Llama-3-8B -e HF_TOKEN=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 -p 8000:8000 huggingface-model-app
+docker run -e MODEL_NAME=meta-llama/Meta-Llama-3-8B -e HF_TOKEN=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 -p 8000:8000 -v ./../volume:/root/.cache/huggingface huggingface-model-app
 ```
+````
+docker run -e MODEL_NAME=distilgpt2 -e HF_TOKEN=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 -p 8000:8000 -v ./../volume:/root/.cache/huggingface huggingface-model-app
+```
+
 
 # Call model
 

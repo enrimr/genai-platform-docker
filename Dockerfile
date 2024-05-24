@@ -16,5 +16,5 @@ COPY . .
 # Expone el puerto en el que el servidor escuchará
 EXPOSE 8000
 
-# Comando para ejecutar la aplicación
-CMD ["python", "app.py"]
+# Comando para ejecutar Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
