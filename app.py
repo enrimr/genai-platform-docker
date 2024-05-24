@@ -11,27 +11,35 @@ app = Flask(__name__, static_url_path='/static')
 model_name = os.getenv('MODEL_NAME', 'openai-community/gpt2')
 hf_token = os.getenv('HF_TOKEN')
 
-# Cargar el modelo y el tokenizador con el token de autenticación
-model = AutoModelForCausalLM.from_pretrained(model_name, use_auth_token=hf_token)
-tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=hf_token)
-
 # Cargar configuración desde config.json
 with open('config.json') as f:
     config = json.load(f)
 
+# Cargar configuración de modelos desde models_config.json
+with open('models_config.json') as f:
+    models_config = json.load(f)
+
+# Verificar si el modelo es sample-based
+is_sample_based = models_config.get(model_name, {}).get('sample_based', True)
+
+# Cargar el modelo y el tokenizador con el token de autenticación
+model = AutoModelForCausalLM.from_pretrained(model_name, token=hf_token)
+tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_token)
+
 @app.route('/')
 def home():
-    return render_template('index.html', config=config)
+    return render_template('index.html', config=config, is_sample_based=is_sample_based, model_name=model_name)
 
 @app.route('/generate', methods=['POST'])
 def generate():
     data = request.get_json()
     prompt = data.get('prompt', '')
     max_new_tokens = data.get('max_new_tokens', config['max_new_tokens'])
-    temperature = data.get('temperature', config['temperature'])
-    top_k = data.get('top_k', config['top_k'])
-    top_p = data.get('top_p', config['top_p'])
+    temperature = data.get('temperature', config['temperature']) if is_sample_based else None
+    top_k = data.get('top_k', config['top_k']) if is_sample_based else None
+    top_p = data.get('top_p', config['top_p']) if is_sample_based else None
     fields = data.get('fields', [])
+    do_sample = is_sample_based
 
     inputs = tokenizer(prompt, return_tensors="pt")
     input_ids = inputs['input_ids']
@@ -40,15 +48,22 @@ def generate():
     start_time = time.time()  # Iniciar el cronómetro
     
     # Generar el texto con los parámetros especificados
-    outputs = model.generate(
-        input_ids=input_ids,
-        attention_mask=attention_mask,
-        max_new_tokens=max_new_tokens,
-        temperature=temperature,
-        top_k=top_k,
-        top_p=top_p,
-        pad_token_id=tokenizer.eos_token_id
-    )
+    generation_args = {
+        "input_ids": input_ids,
+        "attention_mask": attention_mask,
+        "max_new_tokens": max_new_tokens,
+        "do_sample": do_sample,
+        "pad_token_id": tokenizer.eos_token_id
+    }
+    
+    if is_sample_based:
+        generation_args.update({
+            "temperature": temperature,
+            "top_k": top_k,
+            "top_p": top_p
+        })
+    
+    outputs = model.generate(**generation_args)
     
     end_time = time.time()  # Detener el cronómetro
     latency = end_time - start_time  # Calcular la latencia

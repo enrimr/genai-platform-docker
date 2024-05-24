@@ -8,16 +8,15 @@ docker build --pull --no-cache -t huggingface-model-app .
 # Execute container
 
 ```
-docker run -e MODEL_NAME=gpt2 -p 8000:8000 huggingface-model-app
+docker run -e MODEL_NAME=distilgpt2 -p 8000:8000 huggingface-model-app
 ```
 
 With private model:
 
+To use some models you should accept terms and conditions inside Hugging Face
+
 ````
-docker run -e MODEL_NAME=meta-llama/Meta-Llama-3-8B -e HF_TOKEN=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 -p 8000:8000 -v ./../volume:/root/.cache/huggingface huggingface-model-app
-```
-````
-docker run -e MODEL_NAME=distilgpt2 -e HF_TOKEN=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 -p 8000:8000 -v ./../volume:/root/.cache/huggingface huggingface-model-app
+docker run -e MODEL_NAME=meta-llama/Meta-Llama-3-8B -e HF_TOKEN=hf_token -p 8000:8000 -v ./../volume:/root/.cache/huggingface huggingface-model-app
 ```
 
 

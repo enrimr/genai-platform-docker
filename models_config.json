@@ -1,0 +1,11 @@
+{
+    "openai-community/gpt2": {
+        "sample_based": true
+    },
+    "distilgpt2": {
+        "sample_based": true
+    },
+    "bert-base-uncased": {
+        "sample_based": false
+    }
+}
